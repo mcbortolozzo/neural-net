@@ -1,2 +1,3 @@
-test:
-	python src/test.py
+
+run_test: 
+	python -m unittest discover -v
