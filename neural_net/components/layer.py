@@ -11,9 +11,14 @@ class Layer():
 	def activation(self, z):
 		raise NotImplementedError()
 
-	def forward(self, input_activation):
-		activation_with_bias = np.hstack((np.ones((1)), input_activation))
-		self.z_mem = np.matmul(self.input_weights,activation_with_bias.T)
+	def get_squared_weights(self):
+		#Exclude bias weights
+		return self.input_weights[:, 1:] ** 2
+
+	def forward(self, X):
+		m = X.shape[0]
+		X = np.hstack((np.ones((m, 1)), X))
+		self.z_mem = np.matmul(self.input_weights,X.T).T
 		self.a_mem = self.activation(self.z_mem)
 		return self.a_mem
 

@@ -1,4 +1,4 @@
-from neural_net import NetworkBuilder
+from neural_net import NetworkBuilder, NeuralNet
 
 from test.const import *
 
@@ -9,7 +9,7 @@ import unittest
 class TestForwardPropagation(unittest.TestCase):
 
 	def test_forward_activation_small_network_first_input(self):
-		x1 = np.array([0.13])
+		x1 = np.array([[0.13]])
 
 		expected_z2 = np.array([0.413, 0.326])
 		expected_a2 = np.array([0.60181, 0.58079])
@@ -28,7 +28,7 @@ class TestForwardPropagation(unittest.TestCase):
 
 
 	def test_forward_activation_small_network_first_input(self):
-		x1 = np.array([0.42])
+		x1 = np.array([[0.42]])
 
 		expected_z2 = np.array([0.442, 0.384])
 		expected_a2 = np.array([0.60874, 0.59484])
@@ -47,7 +47,7 @@ class TestForwardPropagation(unittest.TestCase):
 
 
 	def test_forward_activation_large_network_first_input(self):
-		x1 = np.array([0.32, 0.68])
+		x1 = np.array([[0.32, 0.68]])
 
 		expected_z2 = np.array([0.74, 1.1192, 0.35640, 0.87440])
 		expected_a2 = np.array([0.677, 0.75384, 0.58817, 0.70566])
@@ -71,7 +71,7 @@ class TestForwardPropagation(unittest.TestCase):
 		self.assertTrue(np.isclose(output, expected_out).all())
 
 	def test_forward_activation_large_network_second_input(self):
-		x1 = np.array([0.83, 0.02])
+		x1 = np.array([[0.83, 0.02]])
 
 		expected_z2 = np.array([0.5525, 0.81380, 0.17610, 0.60410])
 		expected_a2 = np.array([0.63472, 0.69292, 0.54391, 0.64659])
@@ -94,7 +94,39 @@ class TestForwardPropagation(unittest.TestCase):
 		self.assertTrue(np.isclose(nnet.layers[2].z_mem, expected_z4).all())
 		self.assertTrue(np.isclose(output, expected_out).all())
 
+	def test_cost_function_calculation_first_example_no_regularization(self):
+		network_output = np.array([[0.79403], [0.79597]])
+		y = np.array([[0.9], [0.23]])
+
+		expected_loss = 0.82098
+
+		nnet = NeuralNet(0)
+		actual_loss = nnet.loss(network_output, y, should_reduce=False)
+
+		self.assertLess(np.abs(actual_loss-expected_loss),  TOLERANCE)
+
+	def test_cost_function_calculation_second_example_no_regularization(self):
+		network_output = np.array([[0.83318, 0.84132], [0.82953, 0.83832]])
+		y = np.array([[0.75, 0.98], [0.75, 0.28]])
+
+		expected_loss = 1.3675
+
+		nnet = NeuralNet(0)
+		actual_loss = nnet.loss(network_output, y, should_reduce=False)
+
+		self.assertLess(np.abs(actual_loss-expected_loss),  TOLERANCE)
+
+	def test_cost_function_calculation_second_example_with_regularization(self):
+		network_output = np.array([[0.83318, 0.84132], [0.82953, 0.83832]])
+		y = np.array([[0.75, 0.98], [0.75, 0.28]])
+
+		expected_loss = 1.90351
+
+		nnet = NetworkBuilder.build_network_from_input_files(NETWORK_DEFINITION_TEST_FILE_2, WEIGHTS_DEFINITION_TEST_FILE_2)
+		actual_loss = nnet.loss(network_output, y, should_reduce=False)
+
+		self.assertLess(np.abs(actual_loss-expected_loss), TOLERANCE)
+
 
 if __name__ == 'main':
-	print('a')
 	unittest.main()
