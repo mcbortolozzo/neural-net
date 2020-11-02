@@ -34,13 +34,18 @@ class Layer():
 		# Ignore bias component
 		return dW[:, 1:]
 
-	def forward(self, X):
+	def add_bias(self, X):
 		m = X.shape[0]
-		X = np.hstack((np.ones((m, 1)), X))
-		self.in_mem = X
-		
-		self.z_mem = X @ self.W.T
-		self.a_mem = self.activation(self.z_mem)
+		return np.hstack((np.ones((m, 1)), X))
+
+	def run_forward(self, X, W):
+		X_bias = self.add_bias(X)
+		Z = X_bias @ W.T
+		A = self.activation(Z)
+		return X_bias, Z, A
+
+	def forward(self, X):
+		self.in_mem, self.z_mem, self.a_mem = self.run_forward(X, self.W) 
 		return self.a_mem
 
 

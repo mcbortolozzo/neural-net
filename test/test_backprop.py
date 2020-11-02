@@ -60,3 +60,47 @@ class TestBackprop(unittest.TestCase):
 		self.assertTrue(np.isclose(nnet.layers[-1].grad_mem, expected_gradients_theta_3, atol=TOLERANCE).all())
 		self.assertTrue(np.isclose(nnet.layers[-2].grad_mem, expected_gradients_theta_2, atol=TOLERANCE).all())
 		self.assertTrue(np.isclose(nnet.layers[-3].grad_mem, expected_gradients_theta_1, atol=TOLERANCE).all())
+
+	def test_numerical_gradient_validation_small_network(self):
+		epsilon = 0.000001
+		X = np.array([[0.13], [0.42]])
+		Y = np.array([[0.9], [0.23]])
+
+		expected_gradient_theta_1 = np.array([[0.02735, 0.01333], [0.03318, 0.01618]])
+		expected_gradient_theta_2 = np.array([[0.23, 0.14037, 0.13756]])
+
+		nnet = NetworkBuilder.build_network_from_input_files(NETWORK_DEFINITION_TEST_FILE_1, WEIGHTS_DEFINITION_TEST_FILE_1)
+		actual_grads = nnet.verify_gradient(X, Y, epsilon)
+
+		self.assertTrue(np.isclose(actual_grads[0], expected_gradient_theta_1, atol=TOLERANCE).all())
+		self.assertTrue(np.isclose(actual_grads[1], expected_gradient_theta_2, atol=TOLERANCE).all())
+
+	def test_backprop_compared_to_gradient_checking(self):
+		epsilon = 0.000001
+		X = np.array([[0.13], [0.42]])
+		Y = np.array([[0.9], [0.23]])
+
+		nnet = NetworkBuilder.build_network_from_input_files(NETWORK_DEFINITION_TEST_FILE_1, WEIGHTS_DEFINITION_TEST_FILE_1)
+		grad_check = nnet.verify_gradient(X, Y, epsilon)
+
+		nnet.forward(X)
+		nnet.backprop(Y)
+
+		self.assertLess(np.mean(nnet.layers[0].grad_mem - grad_check[0]), 10e-8)
+		self.assertLess(np.mean(nnet.layers[1].grad_mem - grad_check[1]), 10e-8)
+
+	def test_backprop_compared_to_gradient_checking_large(self):
+		epsilon = 0.000001
+		X = np.array([[0.32, 0.68], [0.83, 0.02]])
+		Y = np.array([[0.75, 0.98], [0.75, 0.28]])
+
+		nnet = NetworkBuilder.build_network_from_input_files(NETWORK_DEFINITION_TEST_FILE_2, WEIGHTS_DEFINITION_TEST_FILE_2)
+		grad_check = nnet.verify_gradient(X, Y, epsilon)
+
+		nnet.forward(X)
+		nnet.backprop(Y)
+
+		self.assertLess(np.mean(nnet.layers[0].grad_mem - grad_check[0]), 10e-8)
+		self.assertLess(np.mean(nnet.layers[1].grad_mem - grad_check[1]), 10e-8)
+
+

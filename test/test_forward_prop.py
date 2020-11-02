@@ -101,7 +101,7 @@ class TestForwardPropagation(unittest.TestCase):
 		expected_loss = 0.82098
 
 		nnet = NeuralNet(0)
-		actual_loss = nnet.loss(network_output, y, should_reduce=False)
+		actual_loss = nnet.loss(network_output, y)
 
 		self.assertLess(np.abs(actual_loss-expected_loss),  TOLERANCE)
 
@@ -112,7 +112,7 @@ class TestForwardPropagation(unittest.TestCase):
 		expected_loss = 1.3675
 
 		nnet = NeuralNet(0)
-		actual_loss = nnet.loss(network_output, y, should_reduce=False)
+		actual_loss = nnet.loss(network_output, y)
 
 		self.assertLess(np.abs(actual_loss-expected_loss),  TOLERANCE)
 
@@ -123,7 +123,7 @@ class TestForwardPropagation(unittest.TestCase):
 		expected_loss = 1.90351
 
 		nnet = NetworkBuilder.build_network_from_input_files(NETWORK_DEFINITION_TEST_FILE_2, WEIGHTS_DEFINITION_TEST_FILE_2)
-		actual_loss = nnet.loss(network_output, y, should_reduce=False)
+		actual_loss = nnet.loss(network_output, y)
 
 		self.assertLess(np.abs(actual_loss-expected_loss), TOLERANCE)
 
