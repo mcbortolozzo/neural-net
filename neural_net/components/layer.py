@@ -4,21 +4,42 @@ class Layer():
 
 	def __init__(self, size, input_weights):
 		self.size = size
-		self.input_weights = np.array(input_weights)
+		self.W = np.array(input_weights)
+		self.in_mem = None
 		self.z_mem = None
 		self.a_mem = None
+		self.d_mem = None
+		self.grad_mem = None
 
 	def activation(self, z):
 		raise NotImplementedError()
 
 	def get_squared_weights(self):
 		#Exclude bias weights
-		return self.input_weights[:, 1:] ** 2
+		return self.W[:, 1:] ** 2
+
+	def calculate_gradient(self, delta, lambd):
+		m = delta.shape[0]
+		P = lambd * np.hstack((np.zeros((self.W.shape[0], 1)), self.W[:, 1:]))
+		return (P + delta.T @ self.in_mem)/m
+
+	def backprop(self, delta, lambd, lr):
+		self.d_mem = delta
+		self.grad_mem = self.calculate_gradient(delta, lambd)
+		dW = (delta @ self.W) * (self.in_mem * (1-self.in_mem))
+
+		# Update weights
+		self.W -= lr*np.sum(self.grad_mem, axis=0)
+		
+		# Ignore bias component
+		return dW[:, 1:]
 
 	def forward(self, X):
 		m = X.shape[0]
 		X = np.hstack((np.ones((m, 1)), X))
-		self.z_mem = np.matmul(self.input_weights,X.T).T
+		self.in_mem = X
+		
+		self.z_mem = X @ self.W.T
 		self.a_mem = self.activation(self.z_mem)
 		return self.a_mem
 

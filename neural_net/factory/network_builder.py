@@ -57,9 +57,9 @@ class NetworkBuilder():
 		lambd, layer_sizes = NetworkBuilder.parse_network_file(network_file)
 		input_weights = NetworkBuilder.parse_weights_file(layer_sizes, weights_file)
 		nnet = NeuralNet(lambd)
-		for i in range(1, len(layer_sizes)):
+		for i in range(0, len(layer_sizes) - 1):
 			size = layer_sizes[i]
-			layer_weights = (input_weights[i-1])
+			layer_weights = (input_weights[i])
 			layer = LayerBuilder.build_layer('sigmoid', size, layer_weights)
 			nnet.add_layer(layer)
 
