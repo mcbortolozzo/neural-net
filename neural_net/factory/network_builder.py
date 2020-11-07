@@ -64,6 +64,18 @@ class NetworkBuilder():
 			nnet.add_layer(layer)
 
 		return nnet
+
+	@staticmethod
+	def build_network_from_specs(lambd, lr, layer_specs):
+		nnet = NeuralNet(lambd, lr)
+		prev_layer_size = layer_specs[0]['size']
+		for layer in layer_specs[1:]:
+			layer_shape = (layer['size'], prev_layer_size + 1)
+			l = LayerBuilder.initialize_random_layer(layer['type'], layer_shape)
+			nnet.add_layer(l)
+			prev_layer_size = layer['size']
+
+		return nnet
 		
 
 		

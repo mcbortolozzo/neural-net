@@ -26,11 +26,12 @@ class Layer():
 	def backprop(self, delta, lambd, lr):
 		self.d_mem = delta
 		self.grad_mem = self.calculate_gradient(delta, lambd)
+
 		dW = (delta @ self.W) * (self.in_mem * (1-self.in_mem))
 
 		# Update weights
-		self.W -= lr*np.sum(self.grad_mem, axis=0)
-		
+		self.W -= lr*self.grad_mem
+
 		# Ignore bias component
 		return dW[:, 1:]
 

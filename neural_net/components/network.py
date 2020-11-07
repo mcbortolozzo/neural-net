@@ -5,9 +5,9 @@ import copy
 
 class NeuralNet():
 
-	def __init__(self, lambd):
+	def __init__(self, lambd, lr=0.1):
 		self.lambd = lambd
-		self.lr = 0.1
+		self.lr = lr
 		self.layers = []
 
 	def add_layer(self, layer):

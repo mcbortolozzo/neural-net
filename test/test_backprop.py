@@ -21,6 +21,8 @@ class TestBackprop(unittest.TestCase):
 		nnet.forward(X)
 		nnet.backprop(Y)
 
+		print(nnet.layers[-1].grad_mem)
+		
 		self.assertTrue(np.isclose(nnet.layers[-1].d_mem, expected_delta_3, atol=TOLERANCE).all())
 		self.assertTrue(np.isclose(nnet.layers[-1].grad_mem, expected_gradients_theta_2, atol=TOLERANCE).all())
 		self.assertTrue(np.isclose(nnet.layers[-2].d_mem, expected_delta_2, atol=TOLERANCE).all())
