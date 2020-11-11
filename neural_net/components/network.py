@@ -1,4 +1,5 @@
 from .layer import SigmoidLayer
+from ..evaluation import RegressionMetrics
 
 import numpy as np
 import copy
@@ -29,11 +30,7 @@ class NeuralNet():
 		return S
 
 	def loss(self, x_pred, Y):
-		m = Y.shape[0]
-		loss = np.sum(-Y* np.log(x_pred) - (1-Y)*np.log(1-x_pred), axis=1)
-		loss = np.mean(loss)
-		regularization = self.calculate_regularization(m)
-		return loss + regularization
+		raise NotImplementedError()
 
 	def backprop(self, Y):
 		d = self.layers[-1].a_mem - Y
@@ -62,3 +59,26 @@ class NeuralNet():
 			grads.append(layer_grad)
 
 		return grads
+
+class ClassificationNeuralNet(NeuralNet):
+
+	def __init__(self, lambd, lr=0.1):
+		super().__init__(lambd, lr)
+
+	def loss(self, x_pred, Y):
+		m = Y.shape[0]
+		loss = np.sum(-Y* np.log(x_pred) - (1-Y)*np.log(1-x_pred), axis=1)
+		loss = np.mean(loss)
+		regularization = self.calculate_regularization(m)
+		return loss + regularization
+
+class RegressionNeuralNet(NeuralNet):
+
+	def __init__(self, lambd, lr=0.1):
+		super().__init__(lambd, lr)
+
+	def loss(self, x_pred, Y):
+		m = Y.shape[0]
+		loss = RegressionMetrics.rmse(x_pred, Y)
+		regularization = self.calculate_regularization(m)
+		return loss + regularization

@@ -57,3 +57,11 @@ class SigmoidLayer(Layer):
 
 	def activation(self, z):
 		return 1/(1 + np.exp(-z))
+
+class LinearLayer(Layer):
+
+	def __init__(self, size, input_weights):
+		super().__init__(size, input_weights)
+
+	def activation(self, z):
+		return z

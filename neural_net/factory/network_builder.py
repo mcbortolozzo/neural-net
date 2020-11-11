@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..components import NeuralNet
+from ..components import ClassificationNeuralNet, RegressionNeuralNet
 from .layer_builder import LayerBuilder
 
 class NetworkBuilder():
@@ -56,7 +56,7 @@ class NetworkBuilder():
 	def build_network_from_input_files(network_file, weights_file):
 		lambd, layer_sizes = NetworkBuilder.parse_network_file(network_file)
 		input_weights = NetworkBuilder.parse_weights_file(layer_sizes, weights_file)
-		nnet = NeuralNet(lambd)
+		nnet = ClassificationNeuralNet(lambd)
 		for i in range(0, len(layer_sizes) - 1):
 			size = layer_sizes[i]
 			layer_weights = (input_weights[i])
@@ -66,8 +66,11 @@ class NetworkBuilder():
 		return nnet
 
 	@staticmethod
-	def build_network_from_specs(lambd, lr, layer_specs):
-		nnet = NeuralNet(lambd, lr)
+	def build_network_from_specs(lambd, lr, layer_specs, regression=False):
+		if regression:
+			nnet = RegressionNeuralNet(lambd, lr)
+		else:
+			nnet = ClassificationNeuralNet(lambd, lr)
 		prev_layer_size = layer_specs[0]['size']
 		for layer in layer_specs[1:]:
 			layer_shape = (layer['size'], prev_layer_size + 1)

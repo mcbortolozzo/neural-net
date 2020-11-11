@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..components import SigmoidLayer
+from ..components import SigmoidLayer, LinearLayer
 
 class LayerBuilder():
 
@@ -8,6 +8,8 @@ class LayerBuilder():
 	def build_layer(layer_type, layer_size, input_weights):
 		if layer_type == 'sigmoid':
 			return SigmoidLayer(layer_size, input_weights)
+		elif layer_type == 'linear':
+			return LinearLayer(layer_size, input_weights)
 
 	@staticmethod
 	def initialize_random_layer(layer_type, layer_shape):

@@ -1,0 +1,72 @@
+{
+  "network_specs": [
+    [
+      {
+          "size": 16,
+          "type": "sigmoid"
+        },
+        {
+          "size": 1,
+          "type": "sigmoid"
+        }
+      ],
+      [
+        {
+          "size": 16,
+          "type": "sigmoid"
+        },
+        {
+          "size": 8,
+          "type": "sigmoid"
+        },
+        {
+          "size": 1,
+          "type": "sigmoid"
+        }
+    ],
+    [
+        {
+          "size": 16,
+          "type": "sigmoid"
+        },
+        {
+          "size": 31,
+          "type": "sigmoid"
+        },
+        {
+          "size": 12,
+            "type": "sigmoid" 
+        },
+        {
+          "size": 1,
+          "type": "sigmoid"
+        }
+    ],
+    [
+        {
+          "size": 16,
+          "type": "sigmoid"
+        },
+        {
+          "size": 31,
+          "type": "sigmoid"
+        },
+        {
+          "size": 22,
+            "type": "sigmoid" 
+        },
+        {
+          "size": 11,
+            "type": "sigmoid" 
+        },
+        {
+          "size": 1,
+          "type": "sigmoid"
+        }
+    ]
+  ],
+  "learning_rate": [0.0001, 0.001, 0.01, 0.1],
+  "batch_size": [10, 50, 100, 9999],
+  "kfolds": [10], 
+  "lambda": [0.001, 0.01, 0.1, 1, 10]
+}

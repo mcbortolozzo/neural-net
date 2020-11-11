@@ -1,68 +1,137 @@
 import numpy as np
 import pandas as pd
+import json
+import itertools
 
 from neural_net.factory import NetworkBuilder, DatasetBuilder
-from neural_net.evaluation import DataLoader, ConfusionMatrix
+from neural_net.evaluation import DataLoader, ConfusionMatrix, RegressionMetrics
 
-np.random.seed(1)
+# np.random.seed(1)
 
-TEST_SPECS = { 'learning_rate': 0.1, 'lambda': 0.1, 'kfolds': 10, 'network_specs':[{'size': 13, 'type': 'sigmoid'}, {'size': 4, 'type': 'sigmoid'}]}
-
-K = 10
-BATCH_SIZE = 100
+EPSILON = 0.0001
 EPOCHS = 1000
-EPSILON = 0.00000001
+VERBOSE = True
 
-def run_experiment(dataset_file, target_column, specs, onehot = False, check_gradient = False):
-	lr = specs['learning_rate']
-	lambd = specs['lambda']
-	network_specs = specs['network_specs']
-	k_count = specs['kfolds']
+DATASETS = [ 
+	# {'file': 'data/wine_recognition.tsv', 'target': 'target', 'onehot': True, 'regression': False, 'experiment_specs': 'data/experiment_specs_wine.json'}
+	# {'file': 'data/house_votes_84.tsv', 'target': 'target', 'onehot': False, 'regression': False, 'experiment_specs': 'data/experiment_specs_votes.json'}
+	{'file': 'data/537_houses.tsv', 'target': 'target', 'onehot': False, 'regression': True, 'experiment_specs': 'data/experiment_specs_houses.json'}
+]
+
+OUTPUT_FILE = 'output_results_houses.json'
+
+def run_experiment(dataset_file, target_column, specs, onehot=False, regression=False, verbose=False, check_gradient=False):
+
+	lr = specs[1]
+	batch_size = specs[2]
+	k_count = specs[3]
+	lambd = specs[4]
+	network_specs = specs[0]
+	epochs = EPOCHS
+
+	print('========== Starting Experiment ===========')
+	print('Learning Rate: \t\t %.5f' % lr)
+	print('Batch Size: \t\t %d' % batch_size)
+	print('K-Folds: \t\t %d' % k_count)
+	print('Lambda: \t\t %.4f' % lambd)
+	print('Netowrk Architecture: \t %s' % "IN " +"-".join([str(x['size']) for x in network_specs]) + " OUT")
 
 	kfolds = DatasetBuilder.read_dataset_from_csv_as_kfold(dataset_file, target_column, k_count)
 
-	for train, test in kfolds.get_folds():
-		nnet = NetworkBuilder.build_network_from_specs(lambd, lr, network_specs)
-		cf_matrix = ConfusionMatrix(train[target_column].max()+1)
-		dataloader = DataLoader(train.drop(target_column, axis=1).values, train[[target_column]].values, BATCH_SIZE, shuffle=True, onehot=onehot)
+	results = {'specs': specs, 'folds': []}
 
-		for epoch in range(EPOCHS):
-			i = 0
+	for fold_idx, (train, test) in enumerate(kfolds.get_folds()):
+		print('------ Starting Fold %d ----------' % (fold_idx+1))
+		fold_results = {'epochs': {}}
+		results['folds'].append(fold_results)
+
+		nnet = NetworkBuilder.build_network_from_specs(lambd, lr, network_specs, regression)
+		dataloader = DataLoader(train.drop(target_column, axis=1).values, train[[target_column]].values, batch_size, shuffle=True, onehot=onehot)
+		prev_loss = 99999999
+
+		for epoch in range(epochs):
 			for data in dataloader:
 				X, Y = data	
 				pred = nnet.forward(X)
-				# print('X', X)
-				# print('pred', pred)
-				# print('Y', Y)
 				loss = nnet.loss(pred, Y)
-				# print('W', nnet.layers[0].W)
 				nnet.backprop(Y)
-				# print('W', nnet.layers[0].W)
-				i+=1
-				# if epoch == 10:
-				# 	exit()
-
-				if check_gradient:
-					grad_check = nnet.verify_gradient(X,Y,EPSILON)
-					for i, l in enumerate(nnet.layers):
-						print(np.max(abs(grad_check[i] - l.grad_mem)))
-						assert np.less(abs(grad_check[i] - l.grad_mem), 10e-4).all(), (grad_check[i], l.grad_mem)
 
 
+			if epoch % 10 == 0:
+				if(verbose):
+					print("Epoch: %d \t Loss: %f" % (epoch, loss))		
+					fold_results['epochs'][epoch] = {
+						'loss': loss,
+					}
 
-			if epoch % 100 == 0:
-				print("curent loss %.5f" % loss)
+			if abs(loss - prev_loss) < EPSILON:
+				if verbose:
+					print('stopped because of small loss gain')
+				break
+			else:
+				prev_loss = loss
 
 		X_test = test.drop(target_column, axis=1).values
 		Y_test = test[[target_column]].values
 		Y_pred = nnet.forward(X_test)
 
-		# print(Y_pred, Y_test)
+		if not regression:			
+			cf_matrix = ConfusionMatrix(train[target_column].max()+1)
+			cf_matrix.update(Y_pred, Y_test, onehot)
 
-		cf_matrix.update(Y_pred, Y_test, onehot)
+			fold_results['cf_matrix'] = cf_matrix.matrix.tolist()
+			fold_results['accuracy'] = cf_matrix.accuracy()
+			fold_results['f1_macro'] = cf_matrix.F1_macro()
+		else:
+			fold_results['rmse'] = RegressionMetrics.rmse(Y_pred, Y_test)
+			
 
-		print(cf_matrix.matrix)
+	if not regression:
+		results['accuracy'] = sum([f['accuracy'] for f in results['folds']])/len(results['folds'])
+		results['f1_macro'] = sum([f['f1_macro'] for f in results['folds']])/len(results['folds'])
+	else:
+		results['rmse'] = sum([f['rmse'] for f in results['folds']])/len(results['folds'])
 
 
+	return results
 
-run_experiment('data/test/wine_recognition.tsv', 'target', TEST_SPECS, True, False)
+
+full_results = {'datasets': {}}
+
+
+for data in DATASETS:
+	full_results['datasets'][data['file']] = {'best_results': None, 'experiments' : []}
+	current_dataset_results = full_results['datasets'][data['file']]
+	best_accuracy = 0
+	best_specs = None
+
+	with open(data['experiment_specs'], 'r') as f:
+		experiments = json.load(f)
+		experiment_iterations = itertools.product(*experiments.values())
+
+		for exp_specs in experiment_iterations:
+			with np.errstate(invalid='ignore'):
+				results = run_experiment(data['file'], data['target'], exp_specs, data['onehot'], data['regression'], VERBOSE)
+			current_dataset_results['experiments'].append({'specs': exp_specs, 'results': results})
+			if data['regression']:
+				if results['rmse'] <= best_accuracy:
+					print('New best rmse:', results['rmse'])
+					best_accuracy = results['rmse']
+					best_specs = exp_specs
+				else:
+					print("rmse: %.4f" % results['rmse'])
+			else:
+				if results['accuracy'] >= best_accuracy:
+					print('New best accuracy:', results['accuracy'])
+					best_accuracy = results['accuracy']
+					best_specs = exp_specs
+				else:
+					print("Accuracy: %.4f" % results['accuracy'])
+
+		if data['regression']:
+			current_dataset_results['best_results'] = {'specs': best_specs, 'rmse': best_accuracy}
+		else:
+			current_dataset_results['best_results'] = {'specs': best_specs, 'accuracy': best_accuracy}
+
+with open(OUTPUT_FILE, 'w') as f:
+	json.dump(full_results, f)

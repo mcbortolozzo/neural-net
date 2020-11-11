@@ -1,4 +1,4 @@
-from neural_net import NetworkBuilder, NeuralNet
+from neural_net import NetworkBuilder, ClassificationNeuralNet
 
 from test.const import *
 
@@ -100,7 +100,7 @@ class TestForwardPropagation(unittest.TestCase):
 
 		expected_loss = 0.82098
 
-		nnet = NeuralNet(0)
+		nnet = ClassificationNeuralNet(0)
 		actual_loss = nnet.loss(network_output, y)
 
 		self.assertLess(np.abs(actual_loss-expected_loss),  TOLERANCE)
@@ -111,7 +111,7 @@ class TestForwardPropagation(unittest.TestCase):
 
 		expected_loss = 1.3675
 
-		nnet = NeuralNet(0)
+		nnet = ClassificationNeuralNet(0)
 		actual_loss = nnet.loss(network_output, y)
 
 		self.assertLess(np.abs(actual_loss-expected_loss),  TOLERANCE)

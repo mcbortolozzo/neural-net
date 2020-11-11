@@ -1,3 +1,3 @@
 from .kfold import StratifiedKFolds
 from .dataloader import DataLoader
-from .metrics import ConfusionMatrix
+from .metrics import ConfusionMatrix, RegressionMetrics
