@@ -63,4 +63,12 @@ class RegressionMetrics():
 	def rmse(actual, expected):
 		return np.sqrt(np.sum(np.square(expected - actual))/len(actual))
 
+	@staticmethod
+	def mse(actual, expected):
+		return np.sum(np.square(expected - actual))/len(actual)
+
+	@staticmethod
+	def mean_error(actual, expected):
+		return np.sum(abs(expected - actual))/len(actual)
+
 

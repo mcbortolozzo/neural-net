@@ -5,20 +5,19 @@ import itertools
 
 from neural_net.factory import NetworkBuilder, DatasetBuilder
 from neural_net.evaluation import DataLoader, ConfusionMatrix, RegressionMetrics
+from neural_net.components import MinMaxScaler
 
-# np.random.seed(1)
-
-EPSILON = 0.0001
+EPSILON = 0.000001
 EPOCHS = 1000
-VERBOSE = True
+VERBOSE = False
 
 DATASETS = [ 
-	# {'file': 'data/wine_recognition.tsv', 'target': 'target', 'onehot': True, 'regression': False, 'experiment_specs': 'data/experiment_specs_wine.json'}
-	# {'file': 'data/house_votes_84.tsv', 'target': 'target', 'onehot': False, 'regression': False, 'experiment_specs': 'data/experiment_specs_votes.json'}
-	{'file': 'data/537_houses.tsv', 'target': 'target', 'onehot': False, 'regression': True, 'experiment_specs': 'data/experiment_specs_houses.json'}
+	 {'file': 'data/wine_recognition.tsv', 'target': 'target', 'onehot': True, 'regression': False, 'experiment_specs': 'data/experiment_specs_wine.json'},
+	 {'file': 'data/house_votes_84.tsv', 'target': 'target', 'onehot': False, 'regression': False, 'experiment_specs': 'data/experiment_specs_votes.json'},
+	 {'file': 'data/houses_to_rent_cleaned.tsv', 'target': 'target', 'onehot': False, 'regression': True, 'experiment_specs': 'data/experiment_specs_houses_2.json'}
 ]
 
-OUTPUT_FILE = 'output_results_houses.json'
+OUTPUT_FILE = 'wine_recognition_loss.json'
 
 def run_experiment(dataset_file, target_column, specs, onehot=False, regression=False, verbose=False, check_gradient=False):
 
@@ -49,20 +48,23 @@ def run_experiment(dataset_file, target_column, specs, onehot=False, regression=
 		dataloader = DataLoader(train.drop(target_column, axis=1).values, train[[target_column]].values, batch_size, shuffle=True, onehot=onehot)
 		prev_loss = 99999999
 
+		loss = 0
+		loss_count = 0
 		for epoch in range(epochs):
 			for data in dataloader:
 				X, Y = data	
 				pred = nnet.forward(X)
-				loss = nnet.loss(pred, Y)
+				loss += nnet.loss(pred, Y)
+				loss_count += 1
 				nnet.backprop(Y)
 
 
-			if epoch % 10 == 0:
-				if(verbose):
-					print("Epoch: %d \t Loss: %f" % (epoch, loss))		
-					fold_results['epochs'][epoch] = {
-						'loss': loss,
-					}
+			loss /= loss_count
+			if(verbose):
+				print("Epoch: %d \t Loss: %f" % (epoch, loss))		
+				fold_results['epochs'][epoch] = {
+					'loss': loss,
+				}
 
 			if abs(loss - prev_loss) < EPSILON:
 				if verbose:
@@ -70,6 +72,8 @@ def run_experiment(dataset_file, target_column, specs, onehot=False, regression=
 				break
 			else:
 				prev_loss = loss
+				loss = 0
+				loss_count = 0
 
 		X_test = test.drop(target_column, axis=1).values
 		Y_test = test[[target_column]].values
@@ -84,6 +88,9 @@ def run_experiment(dataset_file, target_column, specs, onehot=False, regression=
 			fold_results['f1_macro'] = cf_matrix.F1_macro()
 		else:
 			fold_results['rmse'] = RegressionMetrics.rmse(Y_pred, Y_test)
+			fold_results['mse'] = RegressionMetrics.mse(Y_pred, Y_test)
+			fold_results['mean_error'] = RegressionMetrics.mean_error(Y_pred, Y_test)
+			print(fold_results)
 			
 
 	if not regression:
@@ -100,6 +107,7 @@ full_results = {'datasets': {}}
 
 
 for data in DATASETS:
+	print("########### Dataset %s ###########" % data['file'])
 	full_results['datasets'][data['file']] = {'best_results': None, 'experiments' : []}
 	current_dataset_results = full_results['datasets'][data['file']]
 	best_accuracy = 0

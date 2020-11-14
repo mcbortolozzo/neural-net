@@ -2,7 +2,7 @@
   "network_specs": [
     [
       {
-          "size": 8,
+          "size": 16,
           "type": "sigmoid"
         },
         {
@@ -12,11 +12,11 @@
     ],
     [
       {
-        "size": 8,
+        "size": 16,
         "type": "sigmoid"
       },
       {
-        "size": 5,
+        "size": 7,
         "type": "sigmoid"
       },
       {
@@ -26,29 +26,33 @@
     ],
     [
       {
-        "size": 8,
+        "size": 16,
         "type": "sigmoid"
       },
       {
+        "size": 10,
+        "type": "sigmoid"
+      },
+      {
+        "size": 4,
+        "type": "sigmoid"
+      },
+      {
+        "size": 1,
+        "type": "linear"
+      }
+    ],
+    [
+      {
         "size": 16,
+        "type": "sigmoid"
+      },
+      {
+        "size": 27,
         "type": "sigmoid"
       },
       {
         "size": 11,
-        "type": "sigmoid"
-      },
-      {
-        "size": 1,
-        "type": "linear"
-      }
-    ],
-    [
-      {
-        "size": 8,
-        "type": "sigmoid"
-      },
-      {
-        "size": 16,
         "type": "sigmoid"
       },
       {
@@ -61,8 +65,8 @@
       }
     ]
   ],
-  "learning_rate": [0.00001, 0.0001, 0.001, 0.01, 0.1],
+  "learning_rate": [0.0001, 0.001, 0.01, 0.1],
   "batch_size": [100, 1000, 5000, 99999],
   "kfolds": [10], 
-  "lambda": [0, 0.00001, 0.0001, 0.001, 0.01, 0.1, 1]
+  "lambda": [0, 0.001, 0.01, 0.1, 1, 10]
 }
